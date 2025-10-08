@@ -305,7 +305,7 @@ const Earthquake: React.FC = () => {
           </div>
   
           {/* Legend */}
-          <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10 rounded-md shadow-lg p-2 sm:p-3 w-40 sm:w-45 bg-white/80">
+          <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10 rounded-md shadow-lg p-2 sm:p-3 w-33 sm:w-38 bg-white/80">
             <h4 className="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Legend</h4>
             <div className="space-y-0.5 sm:space-y-1">
               {[
