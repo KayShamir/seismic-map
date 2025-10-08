@@ -14,7 +14,7 @@ const Earthquake: React.FC = () => {
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [styleReady, setStyleReady] = React.useState(false);
   const [month, setMonth] = React.useState<string | null>(null);
-  const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic();
+  const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic(month);
   
   const seismic = React.useMemo(() => {
     if (!rawSeismic || !rawSeismic.AllThisMonth) {
@@ -41,14 +41,13 @@ const Earthquake: React.FC = () => {
       features: features
     };
   }, [rawSeismic]);
+
   const isCurrentMonth = (() => {
     if (!month) return true;
     const now = new Date();
     const currentMonth = format(now, 'MMMM yyyy');
     return month === currentMonth;
   })();
-
-  console.log(seismic);
 
   const formatMonthForAPI = (date: Date): string => {
     return format(date, 'MMMM yyyy');
@@ -61,7 +60,7 @@ const Earthquake: React.FC = () => {
       container: mapContainer.current,
       style: `mapbox://styles/mapbox/outdoors-v12`,
       center: [123.8854, 10.3157],
-      zoom: 9,
+      zoom: 7.5,
     });
     map.on('load', () => {
       mapRef.current = map;
@@ -98,22 +97,24 @@ const Earthquake: React.FC = () => {
   const handleMonthSelect = (date: Date | undefined) => {
     if (!date) {
       setMonth(null);
+      refetch();
       return;
     }
-    const currentDate = new Date();
-    const currentMonthString = formatMonthForAPI(currentDate);
-    const selectedMonthString = formatMonthForAPI(date);
-
+  
+    const currentMonthString = format(new Date(), 'MMMM yyyy');
+    const selectedMonthString = format(date, 'MMMM yyyy');
+  
     if (selectedMonthString === currentMonthString) {
       setMonth(null);
+      refetch();
     } else {
       setMonth(selectedMonthString);
     }
   };
-
+  
   const handleRefresh = () => {
-    refetch();
-  };
+    setMonth(null);
+  };  
 
   const showPopupOnMap = (seismic: any) => {
     const map = mapRef.current;
@@ -259,59 +260,56 @@ const Earthquake: React.FC = () => {
   const headerRef = React.useRef<HTMLDivElement | null>(null);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden lg:overflow-hidden">
       <header
         ref={headerRef}
-        className="flex flex-col gap-y-1 flex-shrink-0 py-2 bg-white/90 border-b backdrop-blur-sm px-16"
+        className="flex flex-col gap-y-1 flex-shrink-0 py-2 bg-white/90 border-b backdrop-blur-sm px-4 sm:px-8 lg:px-16"
       >
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-semibold">Seismic Activity Map</p>
+            <p className="text-base sm:text-lg font-semibold">Seismic Activity Map</p>
           </div>
-          <Button
-            onClick={handleRefresh}
-            disabled={isClustering}
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-1 cursor-pointer"
-            aria-label="Refresh"
-          >
-            <RefreshCw className={`h-4 w-4 ${isClustering ? 'animate-spin' : ''}`} />
-          </Button>
         </div>
-        <p className="text-muted-foreground text-xs leading-tight">
+        <p className="text-muted-foreground text-xs leading-tight hidden sm:block">
           Visualize seismic events and their magnitudes across the Philippines using live data from PHIVOLCS.
         </p>
       </header>
   
       {/* Main Content — fills remaining height */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2 px-16 py-2 overflow-hidden">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2 px-2 sm:px-4 lg:px-16 py-2 overflow-y-auto lg:overflow-hidden min-h-0">
         {/* Map Container */}
-        <div className="relative h-full min-h-0 flex-1">
-          <div className="absolute top-4 right-4 z-10 flex items-end justify-end gap-1">
+        <div className="relative h-full min-h-[400px] lg:min-h-0 flex-1 flex-shrink-0">
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex items-end justify-end gap-1 hover:bg-transparent cursor-pointer">
             <MonthPicker
-              selected={
-                month === null
-                  ? undefined
-                  : (() => {
-                      try {
-                        return new Date(month + ' 01');
-                      } catch {
-                        return undefined;
-                      }
-                    })()
-              }
+              selected={(() => {
+                if (!month) return new Date();
+                try {
+                  return new Date(month + ' 01');
+                } catch {
+                  return new Date();
+                }
+              })()}
               onSelect={handleMonthSelect}
-              className="h-10 text-xs"
+              className="h-8 sm:h-10 text-xs"
               disableFutureMonths={true}
               minYear={2018}
             />
+            <Button
+              onClick={handleRefresh}
+              disabled={isClustering}
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 cursor-pointer h-8 sm:h-10"
+              aria-label="Refresh"
+            >
+              <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 text-red-500 ${isClustering ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
   
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 z-10 rounded-md shadow-lg p-3 w-45 bg-white/80">
-            <h4 className="text-sm font-semibold mb-2">Legend</h4>
-            <div className="space-y-1">
+          <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10 rounded-md shadow-lg p-2 sm:p-3 w-40 sm:w-45 bg-white/80">
+            <h4 className="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Legend</h4>
+            <div className="space-y-0.5 sm:space-y-1">
               {[
                 { color: '#2ECC71', label: 'Minor, Less than 3.9' },
                 { color: '#F1C40F', label: 'Light, 4.0-4.9' },
@@ -320,9 +318,9 @@ const Earthquake: React.FC = () => {
                 { color: '#8E44AD', label: 'Major, 7.0-7.9' },
                 { color: '#641E16', label: 'Great, 8.0+' },
               ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></div>
-                  <span className="text-[0.65rem]">{label}</span>
+                <div key={label} className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full" style={{ backgroundColor: color }}></div>
+                  <span className="text-[0.6rem] sm:text-[0.65rem]">{label}</span>
                 </div>
               ))}
             </div>
@@ -330,10 +328,10 @@ const Earthquake: React.FC = () => {
   
           {/* Loader */}
           {isClustering && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-white/80 rounded-lg shadow-lg p-4">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-white/80 rounded-lg shadow-lg p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">One moment while we fetched data...</span>
+                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                <span className="text-xs sm:text-sm">One moment while we fetched data...</span>
               </div>
             </div>
           )}
@@ -341,46 +339,46 @@ const Earthquake: React.FC = () => {
           {/* Map */}
           <div
             ref={mapContainer}
-            className="w-full h-full rounded-lg border border-gray-200 min-h-0 bg-gray-50"
+            className="w-full h-full rounded-lg border border-gray-200 min-h-[400px] lg:min-h-0 bg-gray-50"
           />
         </div>
   
         {/* Right Panel (scrolls internally only) */}
-        <div className="rounded-lg border flex flex-col w-full h-full min-h-0">
-          <div className="p-3 border-b flex items-start justify-between flex-shrink-0">
+        <div className="rounded-lg border flex flex-col w-full h-full min-h-[300px] lg:min-h-0 flex-shrink-0">
+          <div className="p-2 sm:p-3 border-b flex items-start justify-between flex-shrink-0">
             <div className="flex flex-col">
-              <h3 className="text-sm font-semibold text-gray-900">
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
                 {isCurrentMonth ? 'Recent Seismic Activity' : 'Previous Seismic Activity'}
               </h3>
-              <div className="text-xs text-muted-foreground text-left">
+              <div className="text-[0.65rem] sm:text-xs text-muted-foreground text-left">
                 {month === null ? format(new Date(), 'MMMM yyyy') : month}
               </div>
             </div>
           </div>
   
           {/* Scrollable List */}
-          <div className="flex-1 overflow-y-auto min-h-0 bg-gray-50">
+          <div className="flex-1 overflow-y-auto lg:overflow-y-auto min-h-0 bg-gray-50">
           {isClustering ? (
           <div className="divide-y divide-primary-foreground">
             {Array.from({ length: 8 }).map((_, idx) => (
-              <div key={idx} className="p-3 w-full">
+              <div key={idx} className="p-2 sm:p-3 w-full">
                 <div className="flex items-start justify-between w-full">
                   <div className="flex-1 min-w-0 w-full">
                     <div className="flex items-center gap-2 mb-1 w-full">
                       <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse"></div>
-                      <div className="h-4 w-full bg-primary-foreground rounded animate-pulse"></div>
-                      <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-3 sm:h-4 w-full bg-primary-foreground rounded animate-pulse"></div>
+                      <div className="h-2 sm:h-3 w-full bg-gray-200 rounded animate-pulse"></div>
                     </div>
-                    <div className="h-3 w-full bg-primary-foreground rounded animate-pulse mb-1"></div>
-                    <div className="h-3 w-full bg-gray-100 rounded animate-pulse"></div>
+                    <div className="h-2 sm:h-3 w-full bg-primary-foreground rounded animate-pulse mb-1"></div>
+                    <div className="h-2 sm:h-3 w-full bg-gray-100 rounded animate-pulse"></div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : !seismic.features || seismic.features.length === 0 ? (
-          <div className="p-4 text-center text-primary-foreground">
-            <p className="text-sm">No seismic activity data available</p>
+          <div className="p-3 sm:p-4 text-center text-primary-foreground">
+            <p className="text-xs sm:text-sm">No seismic activity data available</p>
           </div>
         ) : (
           <div className="divide-y divide-primary-foreground">
@@ -440,30 +438,30 @@ const Earthquake: React.FC = () => {
               return (
                 <div 
                   key={index} 
-                  className="p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="p-2 sm:p-3 hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => showPopupOnMap(seismic)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <div className={`w-2 h-2 rounded-full ${getMagnitudeColor(magnitude)}`}></div>
-                          <span className="text-sm font-medium text-primary">
+                          <span className="text-xs sm:text-sm font-medium text-primary">
                             M {props.magnitude || 'N/A'}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[0.6rem] sm:text-xs text-muted-foreground">
                             {props.depth || 'N/A'} km deep
                           </span>
                         </div>
-                        <span className="text-[0.65rem] text-muted-foreground">
+                        <span className="text-[0.6rem] sm:text-[0.65rem] text-muted-foreground">
                           {getTimeAgo(props.datetime)}
                         </span>
                       </div>
                       <div className="flex flex-col items-start">
-                        <p className="text-xs text-secondary-foreground break-words whitespace-pre-line text-left" title={props.location}>
+                        <p className="text-[0.6rem] sm:text-xs text-secondary-foreground break-words whitespace-pre-line text-left" title={props.location}>
                           {props.location || 'Unknown location'}
                         </p>
-                        <p className="text-[0.65rem] text-muted-foreground mt-1">
+                        <p className="text-[0.55rem] sm:text-[0.65rem] text-muted-foreground mt-1">
                           {props.datetime || 'Unknown time'}
                         </p>
                       </div>
@@ -472,7 +470,7 @@ const Earthquake: React.FC = () => {
                 </div>
               );
             })}
-            <p className="text-[0.65rem] text-muted-foreground text-center py-2">
+            <p className="text-[0.6rem] sm:text-[0.65rem] text-muted-foreground text-center py-1 sm:py-2">
               Showing 20 of {seismic.features.length} earthquakes <br/>
             </p>
           </div>
@@ -482,8 +480,8 @@ const Earthquake: React.FC = () => {
       </main>
   
       {/* Footer */}
-      <footer className="flex-shrink-0 px-16 py-2 bg-white/90 border-t backdrop-blur-sm">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-muted-foreground">
+      <footer className="flex-shrink-0 px-4 sm:px-8 lg:px-16 py-2 bg-white/90 border-t backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2 text-[0.6rem] sm:text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <span>Data Source:</span>
             <a
