@@ -49,9 +49,7 @@ const Earthquake: React.FC = () => {
     return month === currentMonth;
   })();
 
-  const formatMonthForAPI = (date: Date): string => {
-    return format(date, 'MMMM yyyy');
-  };
+
 
   useEffect(() => {
     if (mapRef.current || !mapContainer.current) return;
