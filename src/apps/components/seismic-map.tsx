@@ -14,7 +14,8 @@ const Earthquake: React.FC = () => {
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [styleReady, setStyleReady] = React.useState(false);
   const [month, setMonth] = React.useState<string | null>(null);
-  const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic(month);
+  const [refreshToken, setRefreshToken] = React.useState(0);
+  const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic(month, refreshToken);
   
   const seismic = React.useMemo(() => {
     if (!rawSeismic || !rawSeismic.AllThisMonth) {
@@ -48,8 +49,6 @@ const Earthquake: React.FC = () => {
     const currentMonth = format(now, 'MMMM yyyy');
     return month === currentMonth;
   })();
-
-
 
   useEffect(() => {
     if (mapRef.current || !mapContainer.current) return;
@@ -109,10 +108,6 @@ const Earthquake: React.FC = () => {
       setMonth(selectedMonthString);
     }
   };
-  
-  const handleRefresh = () => {
-    setMonth(null);
-  };  
 
   const showPopupOnMap = (seismic: any) => {
     const map = mapRef.current;
@@ -293,10 +288,16 @@ const Earthquake: React.FC = () => {
               minYear={2018}
             />
             <Button
-              onClick={handleRefresh}
+              onClick={() => {
+                setRefreshToken(Date.now());
+              }}
               disabled={isClustering}
               variant="ghost"
               size="sm"
+              title={isCurrentMonth 
+                ? "Refresh latest live data" 
+                : `Refresh data for ${month}`
+              }
               className="flex items-center gap-1 cursor-pointer h-8 sm:h-10"
               aria-label="Refresh"
             >
@@ -329,7 +330,7 @@ const Earthquake: React.FC = () => {
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-white/80 rounded-lg shadow-lg p-3 sm:p-4">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                <span className="text-xs sm:text-sm">One moment while we fetched data...</span>
+                <span className="text-xs sm:text-sm">One moment while we fetch data...</span>
               </div>
             </div>
           )}
