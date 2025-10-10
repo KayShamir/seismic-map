@@ -425,31 +425,50 @@ const Earthquake: React.FC = () => {
           </div>
         ) : (
           <div className="divide-y divide-primary-foreground">
-            {(seismic.features || []).slice(0, 20).map((seismic: any, index: number) => {
-              const props = seismic.properties || {};
-              const magnitude = props.magnitude || 0;
+            {(() => {
+              const allFeatures = seismic.features || [];
+              const top20 = allFeatures.slice(0, 20);
+              const additionalModerateToGreat = allFeatures.filter(
+                (f: any, i: number) => i >= 20 && parseFloat(f.properties?.magnitude || "0") >= 5.0
+              );
+              const displayedFeatures = [...top20, ...additionalModerateToGreat];
+
               const getMagnitudeColor = (mag: number) => {
-                if (mag < 4.0) return 'bg-[#2ECC71]';
-                if (mag < 5.0) return 'bg-[#F1C40F]';
-                if (mag < 6.0) return 'bg-[#E67E22]';
-                if (mag < 7.0) return 'bg-[#E74C3C]';
-                if (mag < 8.0) return 'bg-[#8E44AD]';
-                return 'bg-[#641E16]';
+                if (mag < 4.0) return "bg-[#2ECC71]";
+                if (mag < 5.0) return "bg-[#F1C40F]";
+                if (mag < 6.0) return "bg-[#E67E22]";
+                if (mag < 7.0) return "bg-[#E74C3C]";
+                if (mag < 8.0) return "bg-[#8E44AD]";
+                return "bg-[#641E16]";
               };
 
               const getTimeAgo = (datetime: string) => {
-                if (!datetime) return 'Unknown';
+                if (!datetime) return "Unknown";
                 try {
-                  const match = datetime.match(/^(\d{2}) (\w+) (\d{4}) - (\d{2}):(\d{2}) (AM|PM)$/);
-                  if (!match) return 'Unknown';
+                  const match = datetime.match(
+                    /^(\d{2}) (\w+) (\d{4}) - (\d{2}):(\d{2}) (AM|PM)$/
+                  );
+                  if (!match) return "Unknown";
 
-                  const [ , day, monthName, year, hour, minute, ampm ] = match;
+                  const [, day, monthName, year, hour, minute, ampm] = match;
                   const months = [
-                    "January", "February", "March", "April", "May", "June",
-                    "July", "August", "September", "October", "November", "December"
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
                   ];
-                  const monthIndex = months.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
-                  if (monthIndex === -1) return 'Unknown';
+                  const monthIndex = months.findIndex(
+                    (m) => m.toLowerCase() === monthName.toLowerCase()
+                  );
+                  if (monthIndex === -1) return "Unknown";
 
                   let hourNum = parseInt(hour, 10);
                   if (ampm === "PM" && hourNum !== 12) hourNum += 12;
@@ -469,55 +488,122 @@ const Earthquake: React.FC = () => {
                   const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
                   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-                  if (diffInMinutes < 1) return 'Just now';
+                  if (diffInMinutes < 1) return "Just now";
                   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
                   if (diffInHours < 24) return `${diffInHours}h ago`;
                   return `${diffInDays}d ago`;
-                } catch (error) {
-                  return 'Unknown';
+                } catch {
+                  return "Unknown";
                 }
               };
 
               return (
-                <div 
-                  key={index} 
-                  className="p-2 sm:p-3 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => showPopupOnMap(seismic)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <div className={`w-2 h-2 rounded-full ${getMagnitudeColor(magnitude)}`}></div>
-                          <span className="text-xs sm:text-sm font-medium text-primary">
-                            M {props.magnitude || 'N/A'}
-                          </span>
-                          <span className="text-[0.6rem] sm:text-xs text-muted-foreground">
-                            {props.depth || 'N/A'} km deep
-                          </span>
+                <>
+                  {top20.map((seismic: any, index: number) => {
+                    const props = seismic.properties || {};
+                    const magnitude = props.magnitude || 0;
+                    return (
+                      <div
+                        key={`recent-${index}`}
+                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => showPopupOnMap(seismic)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1 sm:gap-2">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${getMagnitudeColor(
+                                    magnitude
+                                  )}`}
+                                ></div>
+                                <span className="text-xs sm:text-sm font-medium text-primary">
+                                  M {props.magnitude || "N/A"}
+                                </span>
+                                <span className="text-[0.6rem] sm:text-xs text-muted-foreground">
+                                  {props.depth || "N/A"} km deep
+                                </span>
+                              </div>
+                              <span className="text-[0.6rem] sm:text-[0.65rem] text-muted-foreground">
+                                {getTimeAgo(props.datetime)}
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-start">
+                              <p
+                                className="text-[0.6rem] sm:text-xs text-secondary-foreground break-words whitespace-pre-line text-left"
+                                title={props.location}
+                              >
+                                {props.location || "Unknown location"}
+                              </p>
+                              <p className="text-[0.55rem] sm:text-[0.65rem] text-muted-foreground mt-1">
+                                {props.datetime || "Unknown time"}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-[0.6rem] sm:text-[0.65rem] text-muted-foreground">
-                          {getTimeAgo(props.datetime)}
-                        </span>
                       </div>
-                      <div className="flex flex-col items-start">
-                        <p className="text-[0.6rem] sm:text-xs text-secondary-foreground break-words whitespace-pre-line text-left" title={props.location}>
-                          {props.location || 'Unknown location'}
-                        </p>
-                        <p className="text-[0.55rem] sm:text-[0.65rem] text-muted-foreground mt-1">
-                          {props.datetime || 'Unknown time'}
-                        </p>
-                      </div>
+                    );
+                  })}
+
+                  {additionalModerateToGreat.length > 0 && (
+                    <div className="text-center py-1 text-[0.6rem] text-muted-foreground bg-gray-100 font-semibold">
                     </div>
-                  </div>
-                </div>
+                  )}
+
+                  {additionalModerateToGreat.map((seismic: any, index: number) => {
+                    const props = seismic.properties || {};
+                    const magnitude = props.magnitude || 0;
+                    return (
+                      <div
+                        key={`strong-${index}`}
+                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => showPopupOnMap(seismic)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1 sm:gap-2">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${getMagnitudeColor(
+                                    magnitude
+                                  )}`}
+                                ></div>
+                                <span className="text-xs sm:text-sm font-medium text-primary">
+                                  M {props.magnitude || "N/A"}
+                                </span>
+                                <span className="text-[0.6rem] sm:text-xs text-muted-foreground">
+                                  {props.depth || "N/A"} km deep
+                                </span>
+                              </div>
+                              <span className="text-[0.6rem] sm:text-[0.65rem] text-muted-foreground">
+                                {getTimeAgo(props.datetime)}
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-start">
+                              <p
+                                className="text-[0.6rem] sm:text-xs text-secondary-foreground break-words whitespace-pre-line text-left"
+                                title={props.location}
+                              >
+                                {props.location || "Unknown location"}
+                              </p>
+                              <p className="text-[0.55rem] sm:text-[0.65rem] text-muted-foreground mt-1">
+                                {props.datetime || "Unknown time"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <p className="text-[0.6rem] sm:text-[0.65rem] text-muted-foreground text-center py-1 sm:py-2">
+                    Showing {displayedFeatures.length} earthquakes of {allFeatures.length}
+                  </p>
+                </>
               );
-            })}
-            <p className="text-[0.6rem] sm:text-[0.65rem] text-muted-foreground text-center py-1 sm:py-2">
-              Showing 20 of {seismic.features.length} earthquakes <br/>
-            </p>
+            })()}
           </div>
-        )}
+          )}
           </div>
         </div>
       </main>
