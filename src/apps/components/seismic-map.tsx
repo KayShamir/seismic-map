@@ -15,10 +15,11 @@ const Earthquake: React.FC = () => {
   const [styleReady, setStyleReady] = React.useState(false);
   const [month, setMonth] = React.useState<string | null>(null);
   const [refreshToken, setRefreshToken] = React.useState(0);
-  const { data: rawSeismic, isPending: isClustering, error, refetch } = useGetSeismic(month, refreshToken);
+  const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic(month, refreshToken);
   const [loadingMessageIndex, setLoadingMessageIndex] = React.useState(0);
 
-  console.log(error);
+  console.log(rawSeismic?.error);
+  console.log(rawSeismic);
 
   const loadingMessages = [
     "Fetching takes a minute as we are having large datasets...",
@@ -375,7 +376,7 @@ const Earthquake: React.FC = () => {
           </div>
   
           <div className="flex-1 overflow-y-auto lg:overflow-y-auto min-h-0 bg-gray-50">
-          {error ? (
+          {rawSeismic?.error ? (
             <div className="p-3 sm:p-4 text-center">
               <div className="text-red-500 mb-2">
                 <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,14 +385,14 @@ const Earthquake: React.FC = () => {
               </div>
               <p className="text-xs sm:text-sm text-red-600 font-medium mb-2">Failed to load seismic data</p>
               <p className="text-[0.6rem] sm:text-xs text-red-500 mb-3">
-                {error.message.includes('Connection to earthquake.phivolcs.dost.gov.ph timed out') 
+                {rawSeismic?.error.includes('Connection to earthquake.phivolcs.dost.gov.ph timed out') 
                   ? 'PHIVOLCS server is taking too long to respond. Please try again in a moment.'
-                  : error.message.includes('Max retries exceeded')
+                  : rawSeismic?.error.includes('Max retries exceeded')
                   ? 'Unable to connect to PHIVOLCS data source. The server may be temporarily unavailable.'
                   : 'There was an error fetching the latest seismic data.'}
               </p>
               <Button
-                onClick={() => setRefreshToken(Date.now())}
+                onClick={() => window.location.reload()}
                 size="sm"
                 variant="outline"
                 className="text-xs"
