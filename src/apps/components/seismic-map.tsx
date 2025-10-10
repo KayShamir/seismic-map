@@ -19,9 +19,6 @@ const Earthquake: React.FC = () => {
   const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic(month, refreshToken);
   const [loadingMessageIndex, setLoadingMessageIndex] = React.useState(0);
 
-  console.log(rawSeismic?.error);
-  console.log(rawSeismic);
-
   const loadingMessages = [
     "Fetching takes a minute as we are having large datasets...",
     "Please stay with us, we're processing seismic data...",
