@@ -280,7 +280,7 @@ const Earthquake: React.FC = () => {
   const headerRef = React.useRef<HTMLDivElement | null>(null);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden lg:overflow-hidden">
+    <div className="flex flex-col min-h-screen overflow-hidden lg:overflow-hidden">
       <header
         ref={headerRef}
         className="flex flex-col gap-y-1 flex-shrink-0 py-2 bg-white/90 border-b backdrop-blur-sm px-4 sm:px-8 lg:px-16"
@@ -295,7 +295,7 @@ const Earthquake: React.FC = () => {
         </p>
       </header>
   
-      <main className="flex-grow grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2 px-2 sm:px-4 lg:px-16 py-2 overflow-y-auto lg:overflow-hidden min-h-0">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2 px-2 sm:px-4 lg:px-16 py-2 overflow-hidden min-h-0">
         <div className="relative h-full min-h-[400px] lg:min-h-0 flex-1 flex-shrink-0">
           <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex items-end justify-end gap-1 hover:bg-transparent cursor-pointer">
             <MonthPicker
@@ -364,7 +364,7 @@ const Earthquake: React.FC = () => {
           />
         </div>
   
-        <div className="rounded-lg border flex flex-col w-full h-full min-h-[300px] lg:min-h-0 flex-shrink-0">
+        <div className="rounded-lg border flex flex-col w-full h-full min-h-[300px] lg:min-h-0 flex-shrink-0 max-h-full">
           <div className="p-2 sm:p-3 border-b flex items-start justify-between flex-shrink-0">
             <div className="flex flex-col">
               <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
@@ -376,7 +376,7 @@ const Earthquake: React.FC = () => {
             </div>
           </div>
   
-          <div className="flex-1 overflow-y-auto lg:overflow-y-auto min-h-0 bg-gray-50">
+          <div className="flex-1 overflow-y-auto min-h-0 bg-gray-50 max-h-full">
           {rawSeismic?.error ? (
             <div className="p-3 sm:p-4 text-center">
               <div className="text-red-500 mb-2">
@@ -548,6 +548,7 @@ const Earthquake: React.FC = () => {
 
                   {additionalModerateToGreat.length > 0 && (
                     <div className="text-center py-1 text-[0.6rem] text-muted-foreground bg-gray-100 font-semibold">
+                      Moderate to Great Earthquakes (≥ M5.0)
                     </div>
                   )}
 
@@ -609,7 +610,7 @@ const Earthquake: React.FC = () => {
         </div>
       </main>
   
-      <footer className="sticky bottom-0 px-4 sm:px-8 lg:px-16 py-2 bg-white/90 border-t backdrop-blur-sm z-50">
+      <footer className="flex-shrink-0 px-4 sm:px-8 lg:px-16 py-2 bg-white/90 border-t backdrop-blur-sm mt-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2 text-[0.6rem] sm:text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <span>Data Source:</span>
