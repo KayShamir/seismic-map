@@ -15,7 +15,35 @@ const Earthquake: React.FC = () => {
   const [styleReady, setStyleReady] = React.useState(false);
   const [month, setMonth] = React.useState<string | null>(null);
   const [refreshToken, setRefreshToken] = React.useState(0);
-  const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic(month, refreshToken);
+  const { data: rawSeismic, isPending: isClustering, error, refetch } = useGetSeismic(month, refreshToken);
+  const [loadingMessageIndex, setLoadingMessageIndex] = React.useState(0);
+
+  console.log(error);
+
+  const loadingMessages = [
+    "Fetching takes a minute as we are having large datasets...",
+    "Please stay with us, we're processing seismic data...",
+    "PHIVOLCS data is being collected, almost there...",
+    "Large dataset processing in progress, please wait...",
+    "Seismic data is being analyzed, just a moment more...",
+    "We're gathering comprehensive earthquake data for you...",
+    "Almost done! Processing thousands of seismic records...",
+  ];
+
+  React.useEffect(() => {
+    if (!isClustering) {
+      setLoadingMessageIndex(0);
+      return;
+    }
+  
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((prevIndex) => 
+        (prevIndex + 1) % loadingMessages.length
+      );
+    }, 5000);
+  
+    return () => clearInterval(interval);
+  }, [isClustering]);
   
   const seismic = React.useMemo(() => {
     if (!rawSeismic || !rawSeismic.AllThisMonth) {
@@ -182,7 +210,6 @@ const Earthquake: React.FC = () => {
           'interpolate',
           ['linear'],
           ['zoom'],
-          // ---- Zoomed out ----
           0, [
             'interpolate', ['linear'], ['get', 'magnitude'],
             1, 0.5,
@@ -193,7 +220,6 @@ const Earthquake: React.FC = () => {
             6, 3,
             7, 3.5,
           ],
-          // ---- Mid zoom ----
           8, [
             'interpolate', ['linear'], ['get', 'magnitude'],
             1, 3,
@@ -204,7 +230,6 @@ const Earthquake: React.FC = () => {
             6, 13,
             7, 15,
           ],
-          // ---- Fully zoomed in ----
           16, [
             'interpolate', ['linear'], ['get', 'magnitude'],
             1, 8,
@@ -268,9 +293,7 @@ const Earthquake: React.FC = () => {
         </p>
       </header>
   
-      {/* Main Content — fills remaining height */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2 px-2 sm:px-4 lg:px-16 py-2 overflow-y-auto lg:overflow-hidden min-h-0">
-        {/* Map Container */}
         <div className="relative h-full min-h-[400px] lg:min-h-0 flex-1 flex-shrink-0">
           <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex items-end justify-end gap-1 hover:bg-transparent cursor-pointer">
             <MonthPicker
@@ -305,7 +328,6 @@ const Earthquake: React.FC = () => {
             </Button>
           </div>
   
-          {/* Legend */}
           <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10 rounded-md shadow-lg p-2 sm:p-3 w-33 sm:w-38 bg-white/80">
             <h4 className="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Legend</h4>
             <div className="space-y-0.5 sm:space-y-1">
@@ -325,24 +347,21 @@ const Earthquake: React.FC = () => {
             </div>
           </div>
   
-          {/* Loader */}
           {isClustering && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-white/80 rounded-lg shadow-lg p-3 sm:p-4">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                <span className="text-xs sm:text-sm">One moment while we fetch data...</span>
+                <span className="text-xs sm:text-sm">{loadingMessages[loadingMessageIndex]}</span>
               </div>
             </div>
           )}
   
-          {/* Map */}
           <div
             ref={mapContainer}
             className="w-full h-full rounded-lg border border-gray-200 min-h-[400px] lg:min-h-0 bg-gray-50"
           />
         </div>
   
-        {/* Right Panel (scrolls internally only) */}
         <div className="rounded-lg border flex flex-col w-full h-full min-h-[300px] lg:min-h-0 flex-shrink-0">
           <div className="p-2 sm:p-3 border-b flex items-start justify-between flex-shrink-0">
             <div className="flex flex-col">
@@ -355,9 +374,33 @@ const Earthquake: React.FC = () => {
             </div>
           </div>
   
-          {/* Scrollable List */}
           <div className="flex-1 overflow-y-auto lg:overflow-y-auto min-h-0 bg-gray-50">
-          {isClustering ? (
+          {error ? (
+            <div className="p-3 sm:p-4 text-center">
+              <div className="text-red-500 mb-2">
+                <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <p className="text-xs sm:text-sm text-red-600 font-medium mb-2">Failed to load seismic data</p>
+              <p className="text-[0.6rem] sm:text-xs text-red-500 mb-3">
+                {error.message.includes('Connection to earthquake.phivolcs.dost.gov.ph timed out') 
+                  ? 'PHIVOLCS server is taking too long to respond. Please try again in a moment.'
+                  : error.message.includes('Max retries exceeded')
+                  ? 'Unable to connect to PHIVOLCS data source. The server may be temporarily unavailable.'
+                  : 'There was an error fetching the latest seismic data.'}
+              </p>
+              <Button
+                onClick={() => setRefreshToken(Date.now())}
+                size="sm"
+                variant="outline"
+                className="text-xs"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Try Again
+              </Button>
+            </div>
+          ) : isClustering ? (
           <div className="divide-y divide-primary-foreground">
             {Array.from({ length: 8 }).map((_, idx) => (
               <div key={idx} className="p-2 sm:p-3 w-full">
@@ -478,7 +521,6 @@ const Earthquake: React.FC = () => {
         </div>
       </main>
   
-      {/* Footer */}
       <footer className="flex-shrink-0 px-4 sm:px-8 lg:px-16 py-2 bg-white/90 border-t backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2 text-[0.6rem] sm:text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
