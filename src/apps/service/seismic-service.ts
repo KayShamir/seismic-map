@@ -5,21 +5,24 @@ export const useGetSeismic = (month: string | null, refreshToken: number) => {
   return useQuery({
     queryKey: ['seismic-data', month, refreshToken],
     queryFn: async () => {
-      const response = await fetch(`${API_URL}seismic`, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}seismic?t=${timestamp}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: month ? JSON.stringify({ month }) : undefined,
       });
-      
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.log(response);
+        throw new Error(`Server error: ${response.status}`);
       }
       return await response.json();
     },
-    staleTime: 0,
-    gcTime: 0
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };
