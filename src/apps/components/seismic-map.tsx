@@ -295,7 +295,7 @@ const Earthquake: React.FC = () => {
         </p>
       </header>
   
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2 px-2 sm:px-4 lg:px-16 py-2 overflow-y-auto lg:overflow-hidden min-h-0">
+      <main className="flex-grow grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2 px-2 sm:px-4 lg:px-16 py-2 overflow-y-auto lg:overflow-hidden min-h-0">
         <div className="relative h-full min-h-[400px] lg:min-h-0 flex-1 flex-shrink-0">
           <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex items-end justify-end gap-1 hover:bg-transparent cursor-pointer">
             <MonthPicker
@@ -609,7 +609,7 @@ const Earthquake: React.FC = () => {
         </div>
       </main>
   
-      <footer className="flex-shrink-0 px-4 sm:px-8 lg:px-16 py-2 bg-white/90 border-t backdrop-blur-sm">
+      <footer className="sticky bottom-0 px-4 sm:px-8 lg:px-16 py-2 bg-white/90 border-t backdrop-blur-sm z-50">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2 text-[0.6rem] sm:text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <span>Data Source:</span>
