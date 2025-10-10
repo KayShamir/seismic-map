@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { MonthPicker } from '@/components/ui/month-picker';
 import { Button } from '@/components/ui/button';
+import { Analytics } from '@vercel/analytics/react';
 
 const Earthquake: React.FC = () => {
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -627,6 +628,7 @@ const Earthquake: React.FC = () => {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   );    
 };
