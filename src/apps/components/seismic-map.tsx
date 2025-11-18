@@ -17,7 +17,6 @@ const Earthquake: React.FC = () => {
   const [month, setMonth] = React.useState<string | null>(null);
   const [refreshToken, setRefreshToken] = React.useState(0);
   const { data: rawSeismic, isPending, refetch } = useGetSeismic(month, refreshToken);
-  console.log(isPending);
   const loadingMessage = "We're fetching earthquake data. Please wait…";
   
   const seismic = React.useMemo(() => {
@@ -260,11 +259,11 @@ const Earthquake: React.FC = () => {
       >
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <p className="text-base sm:text-lg font-semibold">Seismic Activity Map</p>
+            <p className="text-base sm:text-lg font-semibold">Philippines Earthquake Monitoring Map</p>
           </div>
         </div>
         <p className="text-muted-foreground text-xs leading-tight hidden sm:block">
-          Visualize seismic events and their magnitudes across the Philippines using live data from PHIVOLCS.
+          Visualize earthquake events and their magnitudes across the Philippines using live data from PHIVOLCS.
         </p>
       </header>
   
@@ -339,7 +338,7 @@ const Earthquake: React.FC = () => {
           <div className="p-2 sm:p-3 border-b flex items-start justify-between flex-shrink-0">
             <div className="flex flex-col">
               <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
-                {isCurrentMonth ? 'Recent Seismic Activity' : 'Previous Seismic Activity'}
+                {isCurrentMonth ? 'Recent Earthquake Activity' : 'Previous Earthquake Activity'}
               </h3>
               <div className="text-[0.65rem] sm:text-xs text-muted-foreground text-left">
                 {month === null ? format(new Date(), 'MMMM yyyy') : month}
@@ -355,13 +354,13 @@ const Earthquake: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <p className="text-xs sm:text-sm text-red-600 font-medium mb-2">Failed to load seismic data</p>
+              <p className="text-xs sm:text-sm text-red-600 font-medium mb-2">Failed to load earthquake data</p>
               <p className="text-[0.6rem] sm:text-xs text-red-500 mb-3">
                 {rawSeismic?.error.includes('Connection to earthquake.phivolcs.dost.gov.ph timed out') 
                   ? 'PHIVOLCS server is taking too long to respond. Please try again in a moment.'
                   : rawSeismic?.error.includes('Max retries exceeded')
                   ? 'Unable to connect to PHIVOLCS data source. The server may be temporarily unavailable.'
-                  : 'There was an error fetching the latest seismic data.'}
+                  : 'There was an error fetching the latest earthquake data.'}
               </p>
               <Button
                 onClick={() => window.location.reload()}
@@ -393,7 +392,7 @@ const Earthquake: React.FC = () => {
           </div>
         ) : !seismic.features || seismic.features.length === 0 ? (
           <div className="p-3 sm:p-4 text-center text-primary-foreground">
-            <p className="text-xs sm:text-sm">No seismic activity data available</p>
+            <p className="text-xs sm:text-sm">No earthquake activity data available</p>
           </div>
         ) : (
           <div className="divide-y divide-primary-foreground">
