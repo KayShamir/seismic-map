@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const useGetSeismic = (month: string | null, refreshToken: number) => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['seismic-data', month, refreshToken],
     queryFn: async () => {
       const timestamp = Date.now();
-      const response = await fetch(`${API_URL}seismic?t=${timestamp}`, {
+      const response = await fetch(`${API_URL}api/seismic?t=${timestamp}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -14,7 +14,6 @@ export const useGetSeismic = (month: string | null, refreshToken: number) => {
       });
 
       if (!response.ok) {
-        console.log(response);
         throw new Error(`Server error: ${response.status}`);
       }
       return await response.json();
@@ -25,4 +24,9 @@ export const useGetSeismic = (month: string | null, refreshToken: number) => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  return {
+    ...query,
+    isPending: query.isLoading || query.isFetching,
+  };
 };

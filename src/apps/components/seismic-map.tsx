@@ -16,33 +16,9 @@ const Earthquake: React.FC = () => {
   const [styleReady, setStyleReady] = React.useState(false);
   const [month, setMonth] = React.useState<string | null>(null);
   const [refreshToken, setRefreshToken] = React.useState(0);
-  const { data: rawSeismic, isPending: isClustering, refetch } = useGetSeismic(month, refreshToken);
-  const [loadingMessageIndex, setLoadingMessageIndex] = React.useState(0);
-
-  const loadingMessages = [
-    "Fetching takes a minute as we are having large datasets...",
-    "Please stay with us, we're processing seismic data...",
-    "PHIVOLCS data is being collected, almost there...",
-    "Large dataset processing in progress, please wait...",
-    "Seismic data is being analyzed, just a moment more...",
-    "We're gathering comprehensive earthquake data for you...",
-    "Almost done! Processing thousands of seismic records...",
-  ];
-
-  React.useEffect(() => {
-    if (!isClustering) {
-      setLoadingMessageIndex(0);
-      return;
-    }
-  
-    const interval = setInterval(() => {
-      setLoadingMessageIndex((prevIndex) => 
-        (prevIndex + 1) % loadingMessages.length
-      );
-    }, 5000);
-  
-    return () => clearInterval(interval);
-  }, [isClustering]);
+  const { data: rawSeismic, isPending, refetch } = useGetSeismic(month, refreshToken);
+  console.log(isPending);
+  const loadingMessage = "We're fetching earthquake data. Please wait…";
   
   const seismic = React.useMemo(() => {
     if (!rawSeismic || !rawSeismic.AllThisMonth) {
@@ -84,7 +60,7 @@ const Earthquake: React.FC = () => {
       container: mapContainer.current,
       style: `mapbox://styles/mapbox/outdoors-v12`,
       center: [123.8854, 10.3157],
-      zoom: 7.5,
+      zoom: 4.5,
     });
     map.on('load', () => {
       mapRef.current = map;
@@ -311,19 +287,17 @@ const Earthquake: React.FC = () => {
             />
             <Button
               onClick={() => {
+                setMonth(null);
                 setRefreshToken(Date.now());
               }}
-              disabled={isClustering}
+              disabled={isPending}
               variant="ghost"
               size="sm"
-              title={isCurrentMonth 
-                ? "Refresh latest live data" 
-                : `Refresh data for ${month}`
-              }
+              title="Refresh and go to current month"
               className="flex items-center gap-1 cursor-pointer h-8 sm:h-10"
               aria-label="Refresh"
             >
-              <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 text-red-500 ${isClustering ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 text-red-500 ${isPending ? 'animate-spin' : ''}`} />
             </Button>
           </div>
   
@@ -346,11 +320,11 @@ const Earthquake: React.FC = () => {
             </div>
           </div>
   
-          {isClustering && (
+          {isPending && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-white/80 rounded-lg shadow-lg p-3 sm:p-4">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                <span className="text-xs sm:text-sm">{loadingMessages[loadingMessageIndex]}</span>
+                <span className="text-xs sm:text-sm">{loadingMessage}</span>
               </div>
             </div>
           )}
@@ -399,7 +373,7 @@ const Earthquake: React.FC = () => {
                 Try Again
               </Button>
             </div>
-          ) : isClustering ? (
+          ) : isPending ? (
           <div className="divide-y divide-primary-foreground">
             {Array.from({ length: 8 }).map((_, idx) => (
               <div key={idx} className="p-2 sm:p-3 w-full">
@@ -425,9 +399,9 @@ const Earthquake: React.FC = () => {
           <div className="divide-y divide-primary-foreground">
             {(() => {
               const allFeatures = seismic.features || [];
-              const top20 = allFeatures.slice(0, 20);
+              const top20 = allFeatures.slice(0, 200);
               const additionalModerateToGreat = allFeatures.filter(
-                (f: any, i: number) => i >= 20 && parseFloat(f.properties?.magnitude || "0") >= 5.0
+                (f: any, i: number) => i >= 20 && parseFloat(f.properties?.magnitude || "0") >= 4.0
               );
               const displayedFeatures = [...top20, ...additionalModerateToGreat];
 
